@@ -1,0 +1,42 @@
+# 核心框架
+fastapi>=0.104.0
+uvicorn>=0.24.0
+
+# 数据库
+psycopg2-binary>=2.9.0
+sqlalchemy>=2.0.0
+alembic>=1.13.0
+
+# 向量数据库
+pgvector>=0.2.0
+
+# 爬虫
+drissionpage>=4.0.0
+requests>=2.31.0
+
+# ASR服务（通过OpenAI兼容Whisper协议调用，无需厂商SDK）
+
+# LLM服务
+openai>=1.0.0
+httpx>=0.25.0
+
+# 任务调度
+apscheduler>=3.10.0
+
+# 工具库
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+aiohttp>=3.9.0
+tenacity>=8.2.0
+
+# 开发工具
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+isort>=5.12.0
+flake8>=6.0.0
+
+# 可选依赖
+redis>=5.0.0  # 用于缓存和消息队列
+jinja2>=3.1.0  # 用于模板渲染（可选）

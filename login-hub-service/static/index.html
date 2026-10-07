@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>多平台登录中心</title>
+<style>
+  body { font-family: "Microsoft YaHei", sans-serif; background:#f5f6fa; margin:0; padding:32px; }
+  h1 { font-size:22px; color:#333; }
+  .sub { color:#888; font-size:13px; margin-bottom:20px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:14px; max-width:1000px; }
+  .card { background:#fff; border-radius:12px; padding:18px 20px; box-shadow:0 2px 10px rgba(0,0,0,.06);
+          display:flex; align-items:center; gap:16px; }
+  .status { width:14px; height:14px; border-radius:50%; background:#bbb; flex-shrink:0; }
+  .status.on { background:#22c55e; box-shadow:0 0 6px #22c55e; }
+  .status.off { background:#ef4444; }
+  .status.checking { background:#f59e0b; }
+  .info { flex:1; min-width:0; }
+  .name { font-weight:bold; font-size:15px; }
+  .state { color:#888; font-size:12px; margin-top:3px; word-break:break-all; }
+  button { padding:8px 14px; border:none; border-radius:8px; cursor:pointer;
+           background:#2563eb; color:#fff; font-size:13px; white-space:nowrap; }
+  button:disabled { background:#93c5fd; cursor:not-allowed; }
+  #msg { margin-top:16px; color:#555; font-size:14px; min-height:20px; max-width:1000px; }
+  .ok { color:#16a34a; } .err { color:#dc2626; }
+</style>
+</head>
+<body>
+<h1>多平台登录中心</h1>
+<div class="sub">每 10 秒自动刷新登录状态 · 后端每 30 分钟自动保活 · 点击「登录」在浏览器窗口新开标签页登录</div>
+<div class="grid" id="grid"></div>
+<div id="msg"></div>
+<script>
+let platforms = [];
+let loggingIn = new Set();
+
+async function loadPlatforms() {
+  const r = await (await fetch('/api/quant/platforms')).json();
+  platforms = r.platforms;
+  render();
+}
+
+function render() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  for (const p of platforms) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <span class="status checking" id="dot-${p.name}"></span>
+      <div class="info">
+        <div class="name">${p.name}</div>
+        <div class="state" id="state-${p.name}">检测中...</div>
+      </div>
+      <button id="btn-${p.name}">登录 / 更新</button>`;
+    card.querySelector('button').onclick = () => openLogin(p.name);
+    grid.appendChild(card);
+  }
+}
+
+async function refresh() {
+  for (const p of platforms) {
+    const dot = document.getElementById('dot-' + p.name);
+    const state = document.getElementById('state-' + p.name);
+    try {
+      const r = await (await fetch('/api/quant/login_status/' + p.name)).json();
+      dot.className = 'status ' + (r.logged_in ? 'on' : 'off');
+      state.textContent = r.logged_in ? '已登录' : ('未登录' + (r.error ? '：' + r.error : ''));
+      state.className = 'state ' + (r.logged_in ? 'ok' : 'err');
+    } catch (e) {
+      dot.className = 'status checking';
+      state.textContent = '状态获取失败：' + e;
+    }
+  }
+}
+
+async function openLogin(name) {
+  const btn = document.getElementById('btn-' + name);
+  const msg = document.getElementById('msg');
+  if (loggingIn.has(name)) return;
+  loggingIn.add(name);
+  btn.disabled = true;
+  msg.textContent = `[${name}] 已在浏览器窗口新开标签页，请在其中完成登录（最长等待 5 分钟）...`;
+  try {
+    const r = await (await fetch('/api/quant/open-login-tab/' + name, {method:'POST'})).json();
+    msg.innerHTML = r.logged_in
+      ? `<span class="ok">[${name}] 登录成功 ✓</span>`
+      : `<span class="err">[${name}] ${r.message || ''} ${r.error || ''}</span>`;
+  } catch (e) { msg.innerHTML = `<span class="err">[${name}] 请求失败：${e}</span>`; }
+  btn.disabled = false;
+  loggingIn.delete(name);
+  refresh();
+}
+
+loadPlatforms().then(refresh);
+setInterval(refresh, 10000);
+</script>
+</body>
+</html>

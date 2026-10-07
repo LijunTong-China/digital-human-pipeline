@@ -1,0 +1,46 @@
+# cloneAIProject 基础设施编排（当前仅数据库和缓存）
+#   - postgres (pgvector) : 热点监控服务数据库（创作者/视频/选题/向量）
+#   - redis               : 缓存与任务队列
+#
+# 应用服务（douyin-login-service / hotspot-monitor）暂本地运行，后续需要时再加回
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: cloneai_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cloneai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cloneai_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-hotspot_monitor}
+      TZ: Asia/Shanghai
+    ports:
+      - "${POSTGRES_PORT:-15432}:5432"
+    volumes:
+      - cloneai_pgdata:/var/lib/postgresql/data
+      # 首次启动自动启用 pgvector 扩展
+      - ./initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cloneai} -d ${POSTGRES_DB:-hotspot_monitor}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: cloneai_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-16379}:6379"
+    volumes:
+      - cloneai_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  cloneai_pgdata:
+  cloneai_redisdata:

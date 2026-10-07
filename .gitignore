@@ -1,0 +1,26 @@
+# ===== 密钥/隐私(绝不能进仓库) =====
+# 注释必须独立成行:gitignore 不支持行尾注释
+.env
+*.env
+login-hub-service/browser_data/
+hotspot-monitor-service/.chrome_profile/
+publish/profiles/
+login-hub-service/data/
+login-hub-service/*.log
+
+# ===== 大体积产物(本地保留,不进 git) =====
+studio/output/
+studio/assets/
+publish/out/
+
+# ===== Python =====
+__pycache__/
+*.pyc
+
+# ===== 临时/调试产物 =====
+*.log
+logs/
+hotspot-monitor-service/*.json
+login-hub-service/*.json
+login-hub-service/*.html
+login-hub-service/vc.txt

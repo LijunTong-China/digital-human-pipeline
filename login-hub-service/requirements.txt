@@ -1,0 +1,5 @@
+fastapi>=0.110
+uvicorn>=0.29
+playwright>=1.44
+langgraph>=0.2.0
+langchain-core>=0.2.0

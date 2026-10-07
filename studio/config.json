@@ -1,0 +1,158 @@
+{
+  // ================= 全流程唯一配置 =================
+  // 改值即生效,不用动代码。字段名是代码按名读取的,别改;注释随意增删。
+  // 流程:①选题 ②NotebookLM出PPT ③演播稿(LLM) → ④配音 → ⑤口型(4090) → ⑥合成 → ⑦关机
+
+  // ---- ③配音音色 ----
+  // 预置音色名(alex/benjamin/charles/david)= 本地 TTS 接口合成,不需要 GPU
+  // "clone" = 把 voice_ref.wav 传到 4090 服务器做克隆音色(走 GPU)
+  "voice": "alex",
+
+  // ---- 成片版式(layout,三选一) ----
+  // voiceonly = 纯PPT版:每页整幅 PPT 图 + 逐页配音,全程无人像出镜
+  // intro     = 真人开场版:开头 N 秒真人口播(形象满高居中、模糊背景垫底,
+  //             走 opening 步骤出开场白口型),之后接 voiceonly 的纯PPT页
+  // board     = 讲课版:PPT 左倾铺底 + 形象满高站右侧全程口播
+  //             (每页都走 lipsync 口型,对应 canvas.lip_* 无关,走 board.* 参数)
+  "layout": "intro",
+
+  // ---- ①选题 + ③演播稿 ----
+  "content": {
+    "directions": ["AI", "大模型", "IT Agent"],   // 选题方向池,按完成题数轮换
+    "topic_cache": "output/work/_topics_done.json", // 已做过选题缓存(查重)
+    "plan": {
+      "min_pages": 10,      // PPT 页数下限(大纲规划强制落在此区间)
+      "max_pages": 14       // PPT 页数上限
+    },
+    "script_min_chars": 140, // 每页演播稿最少字数(约 35 秒口播)
+    "script_max_chars": 220, // 每页演播稿最多字数(约 55 秒)
+    "use_mineru": false      // 图片型 PDF 是否先走 MinerU 云端解析;false = 直接逐页 OCR(视觉 LLM/本地)
+  },
+
+  // ---- ④预置音色的 TTS 接口(OpenAI 兼容;key 在 docker/.env) ----
+  "tts_api": {
+    "model": "FunAudioLLM/CosyVoice2-0.5B",
+    "voice_prefix": "FunAudioLLM/CosyVoice2-0.5B:",
+    "male_voices": ["alex", "benjamin", "charles", "david"]
+  },
+
+  // ---- 开场白(layout=intro 时用) ----
+  "intro": {
+    "max_sec": 12,      // 软限:超出最多加速,不再硬压;文案字数也按它反推
+    "speed_max": 1.2,   // 加速上限倍数(2026-10-04 定版,1.5 倍声音发飘弃用)
+    "text": "auto"      // auto = LLM 3 候选自评选优;也可写死一段文字
+  },
+
+  // ---- ⑧ 发布(publish/,2026-10-04 建,设计见 publish/README.md) ----
+  "publish": {
+    "platforms": ["douyin", "xhs"],    // 发布平台:douyin / xhs
+    // 登录态统一来自 login-hub-service(人工登录一次+30min自动保活,CDP 接管其浏览器)
+    "hub": {
+      "hub_api": "http://127.0.0.1:3459",
+      "hub_cdp_port": 9340,            // 与 login-hub-service/config.py 的 CDP_PORT 一致
+      "shared_profile": "../login-hub-service/browser_data/shared"
+    },
+    "douyin": { "debug_port": 9334 },  // --explore 等自起场景的兜底端口
+    "xhs": { "debug_port": 9335 },
+    "upload_timeout_min": 15,          // 上传+转码轮询上限(分)
+    "daily_limit": 1,                  // 每平台每日发布上限(新号期=1,防风控)
+    "ai_declare": true,                // 自动勾选"AI 生成"声明(合规)
+    // 发布时间窗(随机取点,不整点;README §2⑤);不在此窗口内则顺延
+    "time_windows": [["10:30", "11:40"], ["19:10", "21:30"]],
+    "window_jitter_min": 10,           // 窗口两端随机收缩的分钟数(抖动)
+    "platform_gap_min": 30,            // 两平台发布最小间隔(分;矩阵号特征防护)
+    "warmup": true,                    // 发布前在创作中心浏览 1~2 分钟(暖场)
+    "circuit_breaker": { "max_fails": 2, "days": 3 }  // 连续失败N次→熔断N天
+  },
+
+  // ---- ② NotebookLM 浏览器自动化(nb_auto.py) ----
+  "nb": {
+    // 专用 Chrome 配置目录:人工登录一次 Google 后永久复用
+    "profile_dir": "C:\\Users\\Administrator\\.cache\\chrome-devtools-mcp\\chrome-profile",
+    "chrome_path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "cdp_port": 9333,        // 填端口 = 连接已开着的 Chrome(分离进程不怕脚本超时);null = 脚本自己起
+    "headless": false,
+    "nav_timeout_sec": 90,       // 页面导航超时
+    "card_timeout_sec": 7200,    // 等 PPT 卡片生成的最长时间(排队出片可能几小时)
+    "poll_sec": 60,              // 轮询间隔
+    // true = 额度尽时点「稍后生成」排队并退出(几小时后重跑自动补收);false = 直接终止
+    "allow_later_generation": true,
+    // false = 只填词不提交(人工核对页面用);验证无误后改 true
+    "submit": false
+  },
+
+  // ---- 4090 GPU 服务器(AutoDL):④克隆音色 / ⑤口型 / ⑤b开场白,用完自动关机 ----
+  "server": {
+    "host": "connect.nmb1.seetacloud.com",
+    "port": 23278,
+    "root": "/root/autodl-tmp",                     // 服务器工作根目录
+    "python": "/root/miniconda3/envs/emv3/bin/python",
+    "clone_python": "/root/autodl-tmp/envs/cosyvoice/bin/python",  // ④克隆音色的独立环境
+    "clone_script": "clone_pages.py",  // 服务器上的克隆合成脚本(数据驱动,本地备份在 studio/server_scripts/)
+    "connect_timeout_sec": 10,   // ssh/scp 连接超时(实例关机时快速失败,wait_gpu 靠它快连)
+    "ssh_cmd_timeout_sec": 3600, // 单条 ssh 命令最长执行时间(克隆合成 12 页约十几分钟)
+    "lipsync_timeout_min": 120,  // ⑤整批口型生成的时间上限(分钟),超过判卡死
+    "opening_max_frames": 129,   // ⑤b 开场白口型视频最大帧数(EMV3 单段上限)
+    "pages_dir": "pages",                           // 服务器上音频/任务目录
+    "lipsync_out_dir": "lipsync_out",               // 服务器上口型产物目录
+    "infer_script": "EchoMimicV3/repo/infer_jobs.py", // EMV3 推理脚本
+    "patch_script": "patch_infer_jobs.py",
+    "ref_image": "EchoMimicV3/input_xingxiang.png",
+    "scp_retries": 3,          // 传输重试次数
+    "scp_wait_sec": 30,        // 重试间隔
+    "shutdown_verify_sec": 60, // 关机指令后等多久验证失联
+    "shutdown_retries": 3      // 关机指令重试次数
+  },
+
+  // ---- ⑥合成画布与抠像(1080x1920 竖屏) ----
+  "canvas": {
+    "width": 1080,
+    "height": 1920,
+    "slide_bottom": 1300,  // PPT 图片底边在画布上的 y
+    "lip_width": 260,      // 【保留参数】人像小窗宽(当前三种版式均未用到,留给后续版式)
+    "lip_margin_r": 20,    // 【保留参数】人像小窗右边距
+    "lip_margin_b": 150,   // 【保留参数】人像小窗下边距
+    // 抠像键控:人像底是什么纯色就开哪组;similarity/blend 越大抠得越宽
+    "whitekey": { "color": "0xFFFFFF", "similarity": 0.16, "blend": 0.12 },
+    "greenkey": { "color": "0x1EC55F", "similarity": 0.16, "blend": 0.12 }
+  },
+
+  // ---- board 版式参数 ----
+  "board": {
+    "slide_ratio": 0.55,  // PPT 卡片占画面宽度比例(0.55=右侧留出形象位)
+    "slide_left": 0.02,   // 卡片左缘位置(占屏宽比例,0.02=贴左 2%)
+    "slide_top": null,    // 卡片顶缘 y(px);null = 垂直居中
+    "fit": true,          // true = 整页 PPT 完整放进画面不裁内容;false = 居中裁切铺满(voiceonly 用)
+    "persp": 0.18,        // 绕竖轴向内透视量:右缘(远端)高度缩短比例,0.18≈8°门板感;0=关
+    "angle": 6,           // 2D 平面倾斜角(度),仅 persp=0 时生效
+    "gap_right": 10,      // 形象贴右缘边距(px)
+    "avatar_scale": 0.58  // 形象高度 = PPT卡片高度 × 此比例(1=与卡片等高,调小=形象更小)
+  },
+
+  // ---- 字幕样式 ----
+  "subtitle": {
+    "max_chars": 18,          // 每条字幕最多字数
+    "font_size": 8,
+    "margin_v": 91,
+    "font": "Microsoft YaHei"
+  },
+
+  "page_gap": 0.4,    // 页与页之间停顿秒数
+  "n_pages": "auto",  // auto = 跟随 voices.txt 实际页数;填数字 = 强制页数(临时改小可做短验证)
+
+  // ---- 全部文件产物位置(相对 studio/) ----
+  "paths": {
+    "assets": "assets",
+    "work": "output/work",
+    "final": "output/final",
+    "voices": "assets/voices.txt",
+    "slides": "assets/slides.pdf",
+    "voice_ref": "assets/voice_ref.wav",
+    "ref_prompt": "assets/ref_prompt.txt",  // 参考音频的转写文本(克隆 zero_shot 用;换参考录音必须同步改)
+    "ref_image_white": "assets/形象_white.png",
+    "output_name": "final_video.mp4",
+    "lipsync_prefix": "lipsync_p",
+    "page_audio_prefix": "voice_p",
+    "clone_page_prefix": "clone_p"
+  }
+}

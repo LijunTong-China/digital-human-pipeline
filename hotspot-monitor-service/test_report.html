@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>阶段2 抖音线 真实数据报告</title>
+<style>
+* {margin:0;padding:0;box-sizing:border-box}
+body {font-family:"Microsoft YaHei",sans-serif;background:#0f172a;color:#e2e8f0;padding:30px}
+.wrap {max-width:1080px;margin:0 auto}
+h1 {font-size:26px;margin-bottom:4px}
+.sub {color:#94a3b8;margin-bottom:22px;font-size:13px}
+.banner {border-radius:12px;padding:18px 24px;margin-bottom:22px;background:linear-gradient(135deg,#065f46,#10b981);display:flex;gap:26px;align-items:center}
+.banner .big {font-size:34px;font-weight:800}
+.card {background:#1e293b;border:1px solid #334155;border-radius:12px;padding:18px;margin-bottom:16px}
+.card h2 {font-size:15px;color:#7dd3fc;margin-bottom:12px}
+.vtitle {font-weight:700;font-size:15px;color:#f1f5f9;margin-bottom:6px}
+.meta {color:#94a3b8;font-size:12px}
+table {width:100%;border-collapse:collapse;font-size:13px}
+th {text-align:left;color:#94a3b8;padding:7px 9px;border-bottom:1px solid #334155;font-weight:600}
+td {padding:9px;border-bottom:1px solid #1e293b}
+.pipe {display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.node {background:#0ea5e9;color:#fff;padding:7px 13px;border-radius:8px;font-size:12px;font-weight:600}
+.arrow {color:#64748b}
+.flow {background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px 18px;margin-bottom:16px;font-size:13px}
+</style></head><body><div class="wrap">
+
+<h1>🎬 阶段2 抖音线 — 真实数据可视化报告</h1>
+<div class="sub">数据来源: 本地 PostgreSQL(hotspot_monitor) 实时查询 ｜ 抓取时间: 2026-09-15 晚 ｜ 全程真实抖音数据+真实ASR转写</div>
+
+<div class="banner">
+  <div class="big">3/3</div>
+  <div>
+    <div>订阅博主视频 同步+转写 全部成功</div>
+    <div class="meta" style="color:#d1fae5">合计转写 7,148 字 ｜ 全链路自动化: 主页抓取→详情拦截→下载→ASR→入库</div>
+  </div>
+</div>
+
+<div class="flow">
+  <b style="color:#7dd3fc">自动流水线（每条视频约70秒）</b>
+  <div class="pipe">
+    <div class="node">👤 博主主页抓取</div><span class="arrow">→</span>
+    <div class="node">🔍 详情XHR拦截(标题+播放地址)</div><span class="arrow">→</span>
+    <div class="node">⬇️ L2下载 <span style="opacity:.7">(失败→L3分段捕获)</span></div><span class="arrow">→</span>
+    <div class="node">🎵 ffmpeg转16k wav</div><span class="arrow">→</span>
+    <div class="node">🗣️ SenseVoice ASR</div><span class="arrow">→</span>
+    <div class="node">🗄️ PostgreSQL入库</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>👤 订阅的博主（creators 表）</h2>
+  <table><tr><th>ID</th><th>昵称</th><th>sec_user_id</th><th>视频数</th><th>最近同步</th><th>状态</th></tr>
+  <tr><td>2</td><td style="font-weight:700">哈佛老徐抓AI趋势</td><td style="font-size:11px;color:#94a3b8">MS4wLjABAAAAEMfJKktSQaUca9ThGGFBxiQaXF3W…</td><td>3</td><td>2026-09-15 14:37:41</td><td style="color:#34d399;font-weight:700">success</td></tr>
+  </table>
+</div>
+
+
+    <div class="card">
+      <div class="vtitle">🎬 特斯拉技术分享：明年2季度汽车工业，将迎来没有方向盘的时代#特斯拉 #自动驾驶 #汽车 #Cybercab #端到端</div>
+      <div class="meta">视频ID: 7566572680971865407 ｜ 时长: 385秒 ｜ 转写状态: <span style="color:#34d399;font-weight:700">✅ 已转写</span> ｜ <span>👍 51799</span> <span>💬 8599</span> <span>🔁 30517</span></div>
+      <div class="meta" style="margin-top:4px">分享链接: <a href="https://www.iesdouyin.com/share/video/7566572680971865407" target="_blank" style="color:#7dd3fc">https://www.iesdouyin.com/share/video/7566572680971865407…</a></div>
+      <div style="margin-top:10px;background:#0b1220;border:1px solid #334155;border-radius:8px;padding:12px;font-size:13px;line-height:1.9;color:#cbd5e1">🎼被很多人称为自动驾驶技术处于第三梯队的特斯拉。在最新的业绩电话会里宣布，他们即将达到自动驾驶最重要的里程碑，也就是无人监督的自动驾驶远比人类更加安全。而且这不是说说而已。特斯拉宣布在明年二季度开始生产cyberc，也就是那个金黄色的，没有方向盘和脚踏板的车，并且全力提升产能。如果马斯克没有吹牛，那特斯拉即将在明年会把130年的汽车工业带入一个全新的时代。虽……<div id="t11" style="display:none;white-space:pre-wrap;background:#0b1220;border:1px solid #334155;border-radius:8px;padding:14px;margin-top:10px;max-height:420px;overflow:auto;font-size:13px;line-height:1.9;color:#cbd5e1">🎼被很多人称为自动驾驶技术处于第三梯队的特斯拉。在最新的业绩电话会里宣布，他们即将达到自动驾驶最重要的里程碑，也就是无人监督的自动驾驶远比人类更加安全。而且这不是说说而已。特斯拉宣布在明年二季度开始生产cyberc，也就是那个金黄色的，没有方向盘和脚踏板的车，并且全力提升产能。如果马斯克没有吹牛，那特斯拉即将在明年会把130年的汽车工业带入一个全新的时代。虽然cyberc表面上跟传统汽车的差别没有那么大，仅仅是少了方向盘。和脚踏板，但其实这个区别不亚于汽车和马车的区别。在这个关键的时间档口，特斯拉对自己的核心技术没有藏着掖着。前两天，特斯拉的AI负责人阿肖克在ICCV也就是国际计算机视觉大会上分享了特斯拉自动驾驶的技术细节。特斯拉自己训练的世界模型，以及如何把自动驾驶的AI大脑迁移到opim机器人上，整个分享非常直观，非常精彩。关注特斯拉和自动驾驶的朋友们，这条视频值得你看完。首先，阿肖克解释了特斯拉为什么要用端到端的系统架构。端到端这个词。🎼是被用坏。我曾经看到一个车企说自己的自动驾驶是端到端，结果仔细一看，发现，他说的意思是这个自动驾驶系统能把乘客从A点送到B点。端到端可不是这个意思哈，自动驾驶有两个技术路线，一个叫基于规则，另一个叫端到端。基于规则，顾名思义就是AI做任何决策，都要基于预先用程序写好的规则。这个技术路线乍一听挺合理的对吧？比如看到红灯就刹车，看到黄线就不要压，开车不就应该基于规则嘛。事实上，特斯拉的自动驾驶系统在V12版本之前。😊🎼用的也是基于规则的模型，结果发现这类模型根本就达不到比人类驾驶更加安全的水平。为什么呢？因为很多场景根本就没办法写规则。我们看这个视频，在视频里路很窄，是双向两车道，行驶方向有个大水坑。如果是你你会怎么做？对面车道没有车，所以大部分人会从反方向的车道绕一下。但是如果写规则。大概率会写成。坚决不能开到对面的车道上去。🎼因为不安全，于是这种自动驾驶系统的体验就不可能很好。我曾经开过某品牌的支驾，我发现。每次左拐以后，这个支架都会先开到最右边的车道。有一次最右边的车道明明有车违章停车，他也先要开到最右边的车道，然后再绕开。🎼我一看这种行为就知道这个车厂采用的是基于规则的模型。有意思的是。这个车厂宣称自己是端到端的。🎼我们再来看一个视频，在这个视频里，特斯拉的自动驾驶看到有一群小鸡在过街。于是他就耐心等待。🎼等最后一只小鸡过去了再启动。在另外一个类似的场景，特斯拉遇到了一群鹅，这次自动驾驶系统识别出这群鹅站着没有动，没有再过街。于是特斯拉往回倒了一些，然后绕过去了。你说如果写规则，你要把规则写成什么样，才能如此合理的应对这两种情况？我难以想象，聊到这里，你应该能理解为什么写规则不行了吧。在2023年四季度的电话会里，马斯克宣布自动驾驶系统FSDV12版本删掉了33万行的代码。😊🎼取而代之的是神经网络。这标志着特斯拉彻底放弃了基于规则的模型。🎼转向端到端。那什么是端到端呢？简单来说，端到端就是输入加神经网络，加输出的结构。输入端是一堆数据，比如说7个摄像头过去30秒的画面。🎼导航数据、车的速度等运动数据。音频数据等等这么一大堆数据，经过一个巨大的神经网络的处理，变成两个输出，一个是对方向盘的控制行为。🎼另一个是对速度的控制行为。如果你有足够多这样的输入和输出数据作为训练数据。🎼你就能把这个巨大的神经网络训练的足够聪明之后再来新的输入，这个神经网络就能做出正确的输出，也就是正确的控制速度和方向盘了。阿肖克说。转导端这种技术好是好，但就是需要的数据太多了。好在特斯拉的优势就是数据多。在今年三季度的电话会里。🎼阿肖克宣布，特斯拉已经积累了60亿英里的行车数据，而且。获取新数据的速度非常快。🎼特斯拉每天都能获取相当于一个人开500年车的数据。这些数据里最值钱的不是在高速公路上四平八稳的开车的数据，而是各种奇葩的场景。我们看这几个视频。这是突然闯出一个人的。🎼这是路上有杂物的，还有这种坐个轮椅往后退的，还有违规开到我方车道的。还有这种两个车同时打转的，还有这种前方车突然闪开，有个车迎面开来的要奇葩有多奇葩。🎼在这么多数据的训练下，特斯拉的自动驾驶系统都学会抢答了。我们看这个视频，在视频里，特斯拉识别了车祸。😊安全的停了下来。🎼这看起来没什么，但我们仔细看细节。这幅图的蓝线是速度，我们仔细看这辆车。在这辆车刚发生偏转。🎼还没有出现碰撞的时候，特斯拉就已经预判了车祸。于是开始提前减速，我估计。🎼因为自动驾驶系统在训练的时候看了太多类似的场景，都学会预判了。这其实非常重要。🎼前段时间，董车帝做过一次置家的对比，特斯拉取得了第一名。原因之一就是在很多场景，特斯拉刹住了，其他车没有刹住，这不是特斯拉的刹车好，而是特斯拉的自动驾驶可以更早的预判危险。🎼更快速决策。从而更早刹车，很多人对端到端系统的诟病是端到端系统就是个黑盒，我们都不知道它的运行逻辑。😊那又如何确保安全呢？🎼针对这个问题，阿肖克也做了解释，他说，特斯拉的自动驾驶系统是可以解释的，你甚至可以用自然语言去问系统，说你为什么要这样做决策？模型会用自然语言告诉你他的逻辑。也就是说，你是可以给这个系统加安全机制的。对于如何评价模型，阿肖克也做了解释，什么叫模型评价呢？比如最新出的版本是FSDV14这个版本推出之前，团队如何确保这个模型比之前的V13版本更好呢。阿肖克说，特斯拉做了一个世界模拟器，其实就是我之前聊了很多次的世界模型，新版本出来以后，在这个虚拟世。😊这里多测试测试就够了。很显然，想要做到这一点，这个世界模型需要非常接近真实世界才行。那这个模型真的能做到吗？大家仔细看一下这个视频，你觉得这个视频是实际录制的还是AI生成的？🎼这其实是特斯拉的世界模型生成的。说实话，我是一点都看不出来跟实际录制的视频有什么区别，真的是太逼真了。在虚拟世界里，你可以对于同一个场景对比新模型和老模型的表现。你也可以为新的模型创造更奇葩的场景来测试模型的能力。更重要的是，这个模型还能为特斯拉的机器人opims生成虚拟世界。🎼辅助训练和测试。这个视频就是特斯拉世界模型生成的机器人视角的视频。非常逼真。我之前给大家介绍过。🎼在虚拟世界里训练机器人。效率会几百万倍的提升。所以。🎼想要搞机器人，一个足够强大的世界模型是必备的。从这些视频可以看出，特斯拉在这方面。非常强。看完这些技术分享，你觉得特斯拉真的能在明年二季度把汽车的方向盘和脚踏板去掉吗？130年的汽车工业真的这么快就要被特斯拉彻底改变了吗？欢迎在评论区聊一聊。😊</div><button onclick="var d=document.getElementById('t11');d.style.display=d.style.display==='none'?'block':'none'" style="margin-top:8px;background:#334155;color:#e2e8f0;border:none;border-radius:6px;padding:5px 14px;cursor:pointer;font-size:12px">展开全文(2685字)</button></div>
+    </div>
+    <div class="card">
+      <div class="vtitle">🎬 马斯克最新访谈：特斯拉机器人的新版本会很惊艳#马斯克 #特斯拉 #机器人 #optimus #芯片</div>
+      <div class="meta">视频ID: 7550285229320080681 ｜ 时长: 373秒 ｜ 转写状态: <span style="color:#34d399;font-weight:700">✅ 已转写</span> ｜ <span>👍 65600</span> <span>💬 2881</span> <span>🔁 8484</span></div>
+      <div class="meta" style="margin-top:4px">分享链接: <a href="https://www.iesdouyin.com/share/video/7550285229320080681" target="_blank" style="color:#7dd3fc">https://www.iesdouyin.com/share/video/7550285229320080681…</a></div>
+      <div style="margin-top:10px;background:#0b1220;border:1px solid #334155;border-radius:8px;padding:12px;font-size:13px;line-height:1.9;color:#cbd5e1">🎼前两天，马斯克接受了一场深度访谈，访谈内容干货满满。在访谈中，马斯克把他旗下大部分公司的主要业务讨论了一个遍，包括详细分析了机器人行业的现状。特斯拉opimmus机器人的最新进展，特斯拉即将推出性能提升了40倍的芯片FSD即将迎来的重大升级spaceX准备如何颠覆传统运营商，甚至是手机新建现在卡在哪了？什么时候可以正式商业化运行，AI的发展是否遇到瓶颈了，……<div id="t12" style="display:none;white-space:pre-wrap;background:#0b1220;border:1px solid #334155;border-radius:8px;padding:14px;margin-top:10px;max-height:420px;overflow:auto;font-size:13px;line-height:1.9;color:#cbd5e1">🎼前两天，马斯克接受了一场深度访谈，访谈内容干货满满。在访谈中，马斯克把他旗下大部分公司的主要业务讨论了一个遍，包括详细分析了机器人行业的现状。特斯拉opimmus机器人的最新进展，特斯拉即将推出性能提升了40倍的芯片FSD即将迎来的重大升级spaceX准备如何颠覆传统运营商，甚至是手机新建现在卡在哪了？什么时候可以正式商业化运行，AI的发展是否遇到瓶颈了，超级人工智能什么时候到来等等。干货实在是太多。如果仅仅是囫囵吞枣的。简单聊一下，我觉得就是暴殄天物。所以我决定分几条视频，把这些话题分别给聊透。这些内容里真的蕴含了巨大的机会。对于这些内容感兴趣的朋友们可以先点赞加关注，以防错过后面的内容。今天我们先来详细聊一下特斯拉的机器人和芯片。马斯克说，想要把机器人搞好，必须搞定三件事。第一，必须能生产灵活度接近人手的复杂机械手。第二，必须让机器人可以理解物理世界。第三，必须能量产。除了特斯拉以外，其他机器人都没有搞定这三件事儿。老马这。直男真的是不懂什么叫含蓄和谦虚。🎼我估计很多朋友一听到这种说法就想反驳。先别急。🎼咱们来听听他这么说的理由是什么。😡首先是灵活度接近人手的复杂机器手。因为我们每个人都有双手。🎼所以大家可能觉得手是个很普通的东西。但其实手是一个非常厉害的用途极其多样的工具。你可以用手来干重活，比如挥动棒球棍。也可以干精细活。🎼比如穿针引线和弹奏乐器。想想看，确实是这样。🎼我确实没有见过有哪个单一工具的功能会比手多。之所以手能干这么多事，是因为手极其复杂。🎼有27个自由度，这可以说是生物学和工程学的奇迹。机器手想要像人手一样灵活，就也需要有27个自由度。🎼驱动机器人运动的部件叫制动器。英文叫actctuator。🎼如果把制动器都放在手上，机器人的手就会变得非常大。这就干不了精细活了。怎么办呢？🎼必须把制动器都放在小臂上。然后用绳索来控制手指的运动。人手其实就是这样的。🎼大部分用来控制手指的肌肉都在小臂上。😡这些肌肉通过肌腱来控制手指。🎼马斯克打了个比方。人手就像是个提现陌。🎼这种结构的机械手。马斯克已经做出来了。🎼去年10月10日，cybercap发布会上就展示过。前两天，知名科技公司赛富什的老板去找马斯克，随手拍的视频里。大家也看见了特斯拉机器人的手已经非常接近人手了。马斯克说，这种机器手的设计太复杂。到目前为止，这种机械手包括需要用到的制动器。都没有供应链可以提供。这句话并不夸张。我刚参加过上海的外滩大会，有不少做机器手的公司展示了他们的产品。🎼他们的产品都仅仅是一只手，而不是小臂和手联动的结构。这一点非常值得机器人行业的创业者和投资者关注。为什么呢？🎼因为对于科技公司最怕的就是技术路线选错。比如如果正确的路线是小臂和手联动，那么如果一个公司疯狂去优化，把制动器全部放在手上的方案。那大量的投入很可能会打水漂。🎼类似的情况也出现在自动驾驶上。如果最终发现。🎼纯视觉确实比视觉加激光雷达更好。那在视觉加激光雷达上投入太多的公司就惨了。其次是必须让机器人可以理解物理世界。🎼也就是让机器人必须有个聪明的大脑。早些年大家都看过波士顿动力的机器人。🎼跳舞翻跟头的视频。这体现的是机器人除了手以外的肢体以及小脑的能力。这些年。🎼中国的机器人公司已经在这些能力上超越了波出的动力了。但是在大脑能力上至今还没有公司做的很好。为什么呢？🎼因为这需要非常复杂的模型。非常多的数据以及非常大的算力。🎼马斯克团队凭借这么多年积累的自动驾驶以及X上的海量数据。加上全世界最大的算力集群，在机器人大脑上暂时领先。🎼但依然不够好。之前提到的赛乎是老板拍的视频里。特斯拉机器人的思考速度就不够快。Let&#x27;s go.Awesome.Attend to the kitchen.Okay.Okay, go.I think we need to be given a bit more.嗯.Right now it&#x27;s kind of paranoid about.スペース？针对这个问题。🎼马斯克的解决方案是优化AI芯片。优化AI芯片的方式不是纯靠硬件。🎼而是用硬件提升算力，加上软件提升效率的方式来优化。马斯克说，即将推出的AI5芯片。性能会是A4的40倍。当时听到40倍这个数字的时候，我以为我听错了。🎼马斯克说，AI5芯片在算力上会是AI4的8倍。算法上还能提升5倍，总体就是40倍。🎼AI5芯片会优先用在特斯拉的电动车里。支持自动驾驶，未来也会用在机器人里。🎼现在很多机器人公司采用的方式是买英伟达这样的芯片公司的产品。这样做的坏处是没有办法做到软硬协同优化。毕竟。英伟达不可能为某一家机器人公司专门定制芯片。所以在芯片效率方面，大部分机器人公司都会落后于特斯拉。最后是量产。作为工业品，想要降低成本。最重要的因素就是产量。产量越大，成本就越低。大部分电动公司的毛利都远低于特斯拉，就是因为特斯拉产量大。🎼并且产量集中在model3和model y这两个车型上，对于机器人也一样。马斯克说，只要产量达到100万台。🎼成本就能控制在2到2.5万美元，其中芯片的成本大概是6000美元。至于售价，就要看市场的供需关系了。说白了就是供不应求的时候就卖贵一点。🎼供过于球的时候就卖便宜点。明白了老马的定价策略。🎼你就明白为什么特斯拉的车一会儿降价，一会儿涨价了。访谈中还讨论到了造机器人的难度。🎼马斯克说，造机器人会比生产电动车难很多，但是比造新舰要容易。我之前看过很多人说，未来的电动车公司都会成为机器人公司。😊🎼按老马的这个说法，汽车公司转型做机器人。恐怕没有这么理所当然。🎼因为难度还是有差别的。马斯克说，特斯拉机器人的现状是工程师们。🎼还在纠结版本三的最终设计。罗马用的词是struggling。🎼版本三会有一个巨大的提升，机器人总体的灵活度，尤其是手会非常接近人类。在马斯克的体系里。🎼一个新产品需要三个版本的迭代。一旦版本三定稿。🎼这就意味着特斯拉机器人已经初步成熟，可以量产了。所以版本三非常值得期待。🎼马斯克关于机器人和芯片的讨论就聊到这儿，下期视频我会把访谈剩下的部分聊完。😊包括FSD即将迎来的重大升级，spacex准备如何颠覆传统运营商，甚至是手机。星舰现在卡在哪儿了？🎼什么时候可以正式商业化运行？AI的发展是否遇到瓶颈了？超级人工智能什么时候可以到来？🎼感兴趣的朋友们可以点赞加关注。😊你觉得机器人可以在5年内变得真的有用吗？欢迎在评论区聊一聊。</div><button onclick="var d=document.getElementById('t12');d.style.display=d.style.display==='none'?'block':'none'" style="margin-top:8px;background:#334155;color:#e2e8f0;border:none;border-radius:6px;padding:5px 14px;cursor:pointer;font-size:12px">展开全文(2644字)</button></div>
+    </div>
+    <div class="card">
+      <div class="vtitle">🎬 有了这个神器，分析师们不用再熬夜了～#Reportify#AI</div>
+      <div class="meta">视频ID: 7454583057794764073 ｜ 时长: 251秒 ｜ 转写状态: <span style="color:#34d399;font-weight:700">✅ 已转写</span> ｜ <span>👍 3583</span> <span>💬 122</span> <span>🔁 987</span></div>
+      <div class="meta" style="margin-top:4px">分享链接: <a href="https://www.iesdouyin.com/share/video/7454583057794764073" target="_blank" style="color:#7dd3fc">https://www.iesdouyin.com/share/video/7454583057794764073…</a></div>
+      <div style="margin-top:10px;background:#0b1220;border:1px solid #334155;border-radius:8px;padding:12px;font-size:13px;line-height:1.9;color:#cbd5e1">🎼创业之前，我干过4年投行，两年对冲基金。之前跟大家讲过，做投行的那4年是我人生最痛苦的4年，因为做的事情真的是很繁琐很无聊。而且这些繁琐无聊的事几乎每天都要害我熬夜。我跟大家说，我是一个AI应用公司的创始人，这可不是吹牛啊，我们真的做了不少非常实用的AI应用。其中有一个产品叫repotify就是我平时总是给大家提到的那个AI研究助理repotify，他就能……<div id="t13" style="display:none;white-space:pre-wrap;background:#0b1220;border:1px solid #334155;border-radius:8px;padding:14px;margin-top:10px;max-height:420px;overflow:auto;font-size:13px;line-height:1.9;color:#cbd5e1">🎼创业之前，我干过4年投行，两年对冲基金。之前跟大家讲过，做投行的那4年是我人生最痛苦的4年，因为做的事情真的是很繁琐很无聊。而且这些繁琐无聊的事几乎每天都要害我熬夜。我跟大家说，我是一个AI应用公司的创始人，这可不是吹牛啊，我们真的做了不少非常实用的AI应用。其中有一个产品叫repotify就是我平时总是给大家提到的那个AI研究助理repotify，他就能帮分析师把很多繁琐无聊的事给做了。那不仅如此，repotify还能帮你。😊获取更多的信息，从而帮你发现更多的机会。那接下来我就给你演示一下reportify的功能。第一个功能，智能编程画图。比如说我要对比一下特斯拉和未来汽车过去三年的收入，画成柱状图。如果是纯人工做，你需要先从数据库把特斯拉和未来汽车过去三年的收入找到，导到excel，然后查一下汇率，把未来汽车的收入从人民币转换成美元，然后画图。画完图之后呢，你还要做一些格式的调整之后截图发给老板，或者放到报告里面。这个流程。🎼对于熟手来说，最少也要花个20分钟吧。我给你看一看，用我们的repotify需要花多久。我只需要输入我的需求，然后开干。你看AI开始干活了，你看这一步一步的思路是不是很清晰？😊是不是很有打工感？你看结果出来了。🎼总共用时30秒左右，怎么样？reportify这个功能还可以吧。我们再看一个功能。🎼深度研究。假设晚上11点，你老板突然给你下了一个任务，让你深度研究一个公司。给他写一个详细的报告，他明天一大早要看你在晚上11点接到这种任务，是不是特别想骂娘，你可千万别问我是怎么知道的。这种事我经历了太多次了。你对于一个陌生的公司，想要研究明白，并且写出一份详细的报告。😊🎼少说要花2个小时，你接下来我就给你看一看，用我们的reportify需要花多久。我只需要输入我的需求，然后开盖。哎，你看。🎼这个AI啊会先列出研究大纲，然后一步一步的写报告。妥妥的AI牛马。好，结果出来了。🎼你看看这个文章的质量，有条有理，还图文混拍，这里点击大纲还能直接跳到相应的位置。那这个文章啊我可以很负责的说。质量比大部分初级分析师写的都强。🎼老板肯定满意，关键是快呀。😡总共只花了2分钟，你过去最少两个小时才能搞定的事情。用我们的reportify2分钟搞定了。是不是很爽？是不是能少熬好多夜？🎼我再给你看一个功能，个性化订阅。过去呢作为初级分析师，我每天早上到公司的第一件事情就是按照一定的标准去各大财经媒体看新闻。把相关的新闻找出来。汇总好发给老板。🎼四大会计师事务所之一的某一个是买了我们repotified的客户。他们的并购团队的分析师每天至少需要花两个小时去寻找和汇总并购相关的新闻。🎼那这种活是不是很繁琐啊，越是繁琐，越适合AI。我们的reportifier就能干这个活。🎼你比如说你可以在这里定义你对哪个话题感兴趣。比如说我对特斯拉的robo taxi和FSD感兴趣，我就把这个话题输进去。🎼相当于把这个任务交给AI。然后呢，AI会帮我每天去阅读大量的新闻。🎼如果遇到相关的新闻，AI就会帮我汇总到这里。我每天只需要进入到这个页面就能看到。有用户给我们提了两个需求。第一。🎼在发现新的新闻的时候，能不能第一时间推送到手机。第二，能不能每天把找到的新闻做个总结，相当于日报。你这两个建议都非常的好，我们会在未来的版本里面加入这两个功能。😊report还有很多其他的功能。你比如说。漂亮国公司的财报和电话会纪要。🎼都不好找。但在reportify里面呢，我们都帮你找好了，你只需要输入公司名就能找到。读英文财报和电话会纪要的时候，我们还提供了翻译、总结和问答的功能。这些功能呢都可以帮你大幅提高你阅读这些文档的效率。🎼再比如你可能想查一些数据，比如说特斯拉过去三年的收入，你只需要输入你的需求，reportify就能帮你查出来。非常的方便。🎼当然了，现在的数据还不是很全。未来我们会持续增加。🎼如果你在金融机构或者公司战略部工作。或者你是个投资爱好者，我都强烈建议你去试一试reportify，应该能帮你大幅提高工作效率。🎼另外，我们的reproify还有很强的扩展性。比如说你想象一下。🎼如果把财报研报换成高考志愿填报相关的信息。咱是不是可以做出1个AI版的张雪峰？🎼如果把财报研报换成海外大学相关的信息。咱是不是可以做成1个AI版的留学中介，做教育行业的朋友们可以关注我。下一步我来帮你们提高效率。</div><button onclick="var d=document.getElementById('t13');d.style.display=d.style.display==='none'?'block':'none'" style="margin-top:8px;background:#334155;color:#e2e8f0;border:none;border-radius:6px;padding:5px 14px;cursor:pointer;font-size:12px">展开全文(1819字)</button></div>
+    </div>
+
+<div class="card">
+  <h2>🤖 同步任务记录（sync_tasks 表）</h2>
+  <table><tr><th>任务ID</th><th>状态</th><th>结果</th><th>时间</th></tr>
+  <tr><td>5</td><td style="color:#34d399;font-weight:700">success</td><td style="font-size:12px">{&quot;creator&quot;: &quot;哈佛老徐抓AI趋势&quot;, &quot;success&quot;: true, &quot;task_id&quot</td><td>2026-09-15 14:34:02</td></tr><tr><td>4</td><td style="color:#34d399;font-weight:700">success</td><td style="font-size:12px">{&quot;creator&quot;: &quot;哈佛老徐抓AI趋势&quot;, &quot;success&quot;: true, &quot;task_id&quot</td><td>2026-09-15 14:30:01</td></tr><tr><td>3</td><td style="color:#34d399;font-weight:700">success</td><td style="font-size:12px">{&quot;creator&quot;: &quot;哈佛老徐抓AI趋势&quot;, &quot;success&quot;: true, &quot;task_id&quot</td><td>2026-09-15 14:19:31</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h2>💡 LLM提取的选题 + 向量去重状态（topics 表）</h2>
+  <table><tr><th>ID</th><th>选题标题</th><th>摘要</th><th>热度</th><th>状态</th><th>向量</th></tr>
+  <tr>
+      <td>1</td><td style="color:#fbbf24;font-weight:600">AI一键生成短视频：脚本、配音、画面全流程自动化</td>
+      <td>详解AI视频自动化全流程，从写脚本、AI配音到自动生成画面，一个人一天能批量产出</td>
+      <td>0.9</td><td style="color:#34d399;font-weight:700">pending</td>
+      <td style="color:#34d399">✓</td></tr><tr>
+      <td>2</td><td style="color:#fbbf24;font-weight:600">普通人用AI做自媒体，三个月涨粉十万的变现路径</td>
+      <td>普通人借助AI批量做短视频做自媒体账号，三个月涨粉十万并通过接广告实现变现，展示</td>
+      <td>0.88</td><td style="color:#34d399;font-weight:700">pending</td>
+      <td style="color:#34d399">✓</td></tr><tr>
+      <td>3</td><td style="color:#fbbf24;font-weight:600">AI视频自动化工具清单与实操步骤分享</td>
+      <td>盘点AI视频自动化全流程所需的具体工具清单，配合详细操作步骤教学，帮新手快速上手</td>
+      <td>0.75</td><td style="color:#34d399;font-weight:700">pending</td>
+      <td style="color:#34d399">✓</td></tr><tr>
+      <td>4</td><td style="color:#fbbf24;font-weight:600">AI一键生成短视频：脚本、配音、画面全流程自动化</td>
+      <td>去重测试</td>
+      <td>0.0</td><td style="color:#f87171;font-weight:700">duplicate</td>
+      <td style="color:#34d399">✓</td></tr>
+  </table>
+  <div class="meta" style="margin-top:8px">status=duplicate 的选题由 bge-m3 向量相似度(≥0.85)自动识别并标记 —— 去重生效</div>
+</div>
+
+<div class="card">
+  <h2>🧩 转写文本样本（节选自「马斯克最新访谈」）</h2>
+  <div style="white-space:pre-wrap;background:#0b1220;border:1px solid #334155;border-radius:8px;padding:14px;font-size:13px;line-height:1.9;color:#cbd5e1">🎼前两天，马斯克接受了一场深度访谈，访谈内容干货满满。在访谈中，马斯克把他旗下大部分公司的主要业务讨论了一个遍，包括详细分析了机器人行业的现状。特斯拉opimmus机器人的最新进展，特斯拉即将推出性能提升了40倍的芯片FSD即将迎来的重大升级spaceX准备如何颠覆传统运营商，甚至是手机新建现在卡在哪了？什么时候可以正式商业化运行，AI的发展是否遇到瓶颈了，超级人工智能什么时候到来等等。干货实在是太多。如果仅仅是囫囵吞枣的。简单聊一下，我觉得就是暴殄天物。所以我决定分几条视频，把这些话题分别给聊透。这些内容里真的蕴含了巨大的机会。对于这些内容感兴趣的朋友们可以先点赞加关注，以防错过后面的内容。今天我们先来详细聊一下特斯拉的机器人和芯片。马斯克说，想要把机器人搞好，必须搞定三件事。第一，必须能生产灵活度接近人手的复杂机械手。第二，必须让机器人可以理解物理世界。第三，必须能量产。除了特斯拉以外，其他机器人都没有搞定这三件事儿。老马这……</div>
+</div>
+
+<div class="meta" style="text-align:center;margin-top:14px">cloneAIProject · 阶段2 · 数据全部来自本系统真实抓取（非模拟）</div>
+</div></body></html>
