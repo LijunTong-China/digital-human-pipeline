@@ -18,6 +18,7 @@ import avutils as U
 
 CFG = U.CFG
 SRV = CFG["server"]
+SRV["port"] = U.resolve_server_port()   # 多实例:谁开机用谁
 P = CFG["paths"]
 WORK = STUDIO / P["work"]
 LIP = WORK / "lipsync"
@@ -159,7 +160,10 @@ def wait_gpu():
 def step_content():
     print("── ①③ 内容生成(选题/源文档/演播稿)──")
     import content
-    content.step_content()
+    # 热点话题 hint:上游编排(run_all.py 从热点监控服务抓题)经 TOPIC_HINT 传入,
+    # 空则 content 自主选题,行为不变
+    import os
+    content.step_content(hint=os.environ.get("TOPIC_HINT", "").strip())
 
 
 # ---------------------------------------------------------------- ④ 配音
@@ -293,6 +297,42 @@ def step_lipsync():
     print(f"[⑤ ok] {npages} 个口型视频已下载")
 
 
+def fit_opening_video(path):
+    """开场白形象缩放(2026-10-08,调整发生在视频制作阶段,合成零改动):
+    按 intro.avatar_scale 缩小口型视频,白底补到画布尺寸(白色可被键控抠掉),
+    头顶留空隙、底部落地。指纹戳防重复处理;scale>=1 原样跳过。"""
+    scale = float(CFG["intro"].get("avatar_scale", 1))
+    if scale >= 1 or not path.exists():
+        return
+    fp = U.md5_of(path)
+    stamp = path.with_name("_opening_fit.md5")
+    if stamp.exists() and stamp.read_text(encoding="utf-8").strip() == fp:
+        print("[⑤b] 开场白已缩放过,跳过")
+        return
+    cv = CFG["canvas"]
+    w, h = int(cv["width"]), int(cv["height"])
+    ph = round(h * scale)
+    # EMV3 产物是 768x768 方形。2026-10-08 修复:改为高度驱动(按 avatar_scale 定高),
+    # 宽超出画布就居中裁掉左右(人像居中,裁的是两侧背景)。
+    # 旧实现宽度优先,高度被卡死在 56% 画布高,0.85/0.95 全一个样——"85太小100太大"的根因。
+    import imageio.v3 as _iio
+    iw, ih = _iio.immeta(str(path))["size"]
+    k = ph / ih
+    sw, sh = round(iw * k / 2) * 2, round(ih * k / 2) * 2
+    vf = f"scale={sw}:{sh}"
+    if sw > w:
+        vf += f",crop={w}:{sh}:{(sw - w) // 2}:0"
+        sw = w
+    tmp = path.with_name("_opening_fit_tmp.mp4")
+    U.run_ff(["-i", str(path), "-vf",
+              vf + f",pad={w}:{h}:(ow-iw)/2:{h - sh}:color=white",
+              "-c:a", "copy", "-y", str(tmp)], "opfit")
+    path.unlink()
+    tmp.rename(path)
+    stamp.write_text(U.md5_of(path) + "\n", encoding="utf-8")
+    print(f"[⑤b] 形象已缩放至 {scale:.0%} 画布高(底部落地) → {path.name}")
+
+
 def step_opening():
     """⑤b 开场白口型(intro 模式):单段 EMV3 推理。"""
     if CFG["layout"] != "intro":
@@ -362,12 +402,16 @@ def step_opening():
             # 进程活性检测:推理进程没了且产物没出,立即报错,不再傻等 20 分钟
             if ssh("pgrep -f 'run_jobs.py|infer_jobs.py'", check=False).returncode != 0:
                 sys.exit("[⑤b fail] 推理进程已死但无产物,日志: "
-                         + ssh(f"tail -30 {srv_path('opening_run.log')}"))
+                         + ssh(f"tail -30 {srv_path('opening_run.log')}",
+                               check=False).stdout)
             tail = ssh(f"tail -2 {srv_path('opening_run.log')}").stdout
             if "Error" in tail or "Traceback" in tail:
-                sys.exit("[⑤b fail] " + ssh(f"tail -30 {srv_path('opening_run.log')}"))
+                sys.exit("[⑤b fail] 日志尾部:\n"
+                         + ssh(f"tail -30 {srv_path('opening_run.log')}",
+                               check=False).stdout)
             print(f"[poll] 开场白推理中… {int(time.time()-t0)}s")
     scp(srv_path(f"{SRV['lipsync_out_dir']}/opening.mp4"), LIP / "lipsync_opening.mp4")
+    fit_opening_video(LIP / "lipsync_opening.mp4")
     print("[⑤b ok] lipsync_opening.mp4")
 
 
@@ -395,12 +439,40 @@ def step_shutdown():
     sys.exit("[⑦ fail] 请到控制台手动关机")
 
 
+def resume_report():
+    """启动时打印各步产物现状:哪步会复用、哪步要新做,续跑/重做一目了然。"""
+    print("── 续跑状态 ──")
+    def ok(p): return "✓已有" if Path(p).exists() else "—缺失"
+    t = WORK / "topic.json"
+    if t.exists():
+        import json as J
+        print(f"  选题: {ok(t)} {J.loads(t.read_text(encoding='utf-8')).get('title','')}")
+    else:
+        print("  选题: —缺失(将重新选题)")
+    print(f"  PPT(slides.pdf): {ok(ASSETS / 'slides.pdf')}")
+    print(f"  演播稿(voices.txt): {ok(ASSETS / Path(P['voices']).name)}"
+          f" ({len(U.voices_pages()) if (ASSETS / Path(P['voices']).name).exists() else 0} 页)")
+    clone = list(WORK.glob("clone_p*.wav"))
+    print(f"  克隆配音(clone_p*.wav): {len(clone)} 个")
+    lip = list(LIP.glob("lipsync_p*.mp4"))
+    print(f"  口型视频(lipsync_p*.mp4): {len(lip)} 个")
+    finals = sorted((WORK.parent).glob("**/final*.mp4")) + sorted((ASSETS).glob("final*.mp4"))
+    if finals:
+        print(f"  成片: {finals[-1].name} ✓已有")
+    n = U.n_pages()
+    if clone and lip and len(lip) >= n:
+        print("  → 各步产物齐全,本次直接续跑到合成,不消耗 GPU 重做")
+    elif not clone and not lip:
+        print("  → 克隆配音/口型尚未做过,本次将需要 GPU(开机一台实例即可)")
+
+
 if __name__ == "__main__":
     steps = sys.argv[1:]
     # 步骤统一由 layout 决定:敲 lipsync 或 opening 都解析为当前版式
     # 实际需要的那种口型步骤(board=逐页口型,intro=开场白口型),命令敲错也不跑多余 GPU
     lip_step = "lipsync" if CFG["layout"] == "board" else "opening"
     steps = [lip_step if s in ("lipsync", "opening") else s for s in steps]
+    resume_report()
     if not steps:
         steps = ["content", "voice", lip_step, "compose", "shutdown"]
     for s in steps:

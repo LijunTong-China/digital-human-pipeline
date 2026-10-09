@@ -1,6 +1,11 @@
 """Pydantic 数据模型定义"""
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from typing import Generic, List, Optional, Dict, Any, TypeVar
+from pydantic import BaseModel, Field, field_validator
+
+
+def _orm_to_dict(o):
+    """SQLAlchemy ORM 对象 → 列名 dict(pydantic v2 不会自动序列化 ORM 对象)"""
+    return {c.name: getattr(o, c.name) for c in o.__table__.columns}
 from datetime import datetime
 
 
@@ -149,17 +154,36 @@ class SyncTask(SyncTaskBase):
         from_attributes = True
 
 
-class APIResponse(BaseModel):
+T = TypeVar("T")
+
+
+class APIResponse(BaseModel, Generic[T]):
     """通用API响应模型"""
     success: bool = Field(..., description="操作是否成功")
     data: Optional[Any] = Field(None, description="返回数据")
+
+    @field_validator("data", mode="before")
+    @classmethod
+    def _dump_orm(cls, v):
+        if hasattr(v, "__table__"):
+            return _orm_to_dict(v)
+        if isinstance(v, list) and v and hasattr(v[0], "__table__"):
+            return [_orm_to_dict(o) for o in v]
+        return v
     message: Optional[str] = Field(None, description="消息信息")
     error: Optional[str] = Field(None, description="错误信息")
 
 
-class PaginatedResponse(BaseModel):
+class PaginatedResponse(BaseModel, Generic[T]):
     """分页响应模型"""
     items: List[Any] = Field(..., description="数据列表")
+
+    @field_validator("items", mode="before")
+    @classmethod
+    def _dump_orm(cls, v):
+        if isinstance(v, list) and v and hasattr(v[0], "__table__"):
+            return [_orm_to_dict(o) for o in v]
+        return v
     total: int = Field(..., description="总记录数")
     page: int = Field(..., description="当前页码")
     page_size: int = Field(..., description="每页数量")

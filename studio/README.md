@@ -57,6 +57,15 @@ NotebookLM 提示词**,NotebookLM 按提示词执行生成 PPT——骨架由提
 
 ### ②PPT(NotebookLM,浏览器自动化 nb_auto.py)
 
+**来源通道(2026-10-08 定版方案B,AB 对比后固化)**:
+- 默认:提示词刻意**含糊**(`nb_prompt.txt`,只给主题/页数/版式/叙事风格,不锁逐页——
+  骨架填空式会导致 PPT 套话化)+ 来源走 **NotebookLM「发现来源」联网检索**
+  (来源面板搜索框填 topic.json 的 title+angle → arrow_forward → 等「Fast Research 已完成」
+  → 点「导入」,实测 20s 出 10 个真实来源;0 来源提交会被静默丢弃)
+- `--paste-source`:旧通道备用,粘贴闭门写的 `source_text.txt`(gen_source_text,已不在流程中调用)
+- AB 对比结论:方案A(骨架+闭门来源)视觉冲击强但数据编造感重;方案B 内容实、
+  引用真实案例/量化指标,定版 B。产物统一 `assets/slides.pdf`
+
 - 流程:打开 NotebookLM(专用已登录 profile)→ 新建笔记本 →
   **添加来源**(`复制的文字` 粘贴 `output/work/source_text.txt`,见下)→
   Studio"演示文稿"对话框 → 选格式 → 填入 `output/work/nb_prompt.txt` 的骨架提示词 →
@@ -105,6 +114,9 @@ NotebookLM 提示词**,NotebookLM 按提示词执行生成 PPT——骨架由提
      `work/opening_text.txt`,重写文案删它
    - 开场白口型 = 单段 EMV3 推理(≤129 帧 ≈5.2s),只此一段用 GPU
      ⚠️ 已知限制:音频长于 5.2s 时,超出部分形象定格不动嘴(口型单段上限所限)
+   - **形象缩放在视频制作阶段**(2026-10-08):⑤b 下载口型成品后,本地按
+     `intro.avatar_scale`(0.85)缩放并以白底补到画布高(顶部白边可被键控抠掉,
+     底部落地);指纹戳防重复处理。合成阶段对此零改动
 2. **正片段**:PPT 全屏 + 字幕 + 声音,形象不再出现(省 GPU/生成时间)
 - 产物链:开场白音频+口型 → 各页音频 → 合成
 
@@ -191,7 +203,7 @@ python studio/pipeline.py shutdown   # ⑦关机(防空烧)
 - 前置:`docker/.env` 提供 `LLM_API_KEY / LLM_BASE_URL / LLM_MODEL / MINERU_API_KEY`
 - GPU 步骤(voice/lipsync/opening)开头自动快连,连不上会提示「请到控制台开机」并等待回车;
   跑完最后一个 GPU 步骤自动关机
-- 实例重启换端口:只改 `config.json → server.port`(当前 connect.nmb1.seetacloud.com:23278)
+- 实例重启换端口:只改 `config.json → server.port`(当前 connect.nmb1.seetacloud.com:49230)
 
 ### 10.2 服务器侧人工排查(仅 pipeline 出问题才需要 ssh 上去看)
 

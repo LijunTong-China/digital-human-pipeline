@@ -149,15 +149,18 @@ def slide_prepare(slide_png: str, dst: str) -> Image.Image:
         # 完整版:整页缩放进画布(左右留边距,底部对齐 slide_bottom),不裁任何内容。
         # 2026-10-07 修复:原实现固定缩放到 1200 宽 > 画布 1080,paste 时 x=-60
         # 把幻灯片左右各裁掉一条(PPT 展示不全的根因)。
-        margin = 40
-        max_w, max_h = W - margin * 2, CANVAS["slide_bottom"] - margin
-        if tw > max_w or th > max_h:      # 超出可展示区:等比缩到放得下
+        # 2026-10-08:边距 40→20(PPT 调大);垂直位置由 canvas.slide_center 控制
+        # (0=贴顶 0.5=正中 1=贴底;0.5 曾偏上、1 贴底偏下,现取 0.75)
+        margin = 20
+        max_w, max_h = W - margin * 2, CANVAS["slide_bottom"] - margin * 2
+        if tw > max_w or th > max_h:      # 超出可展示区:等比缩放到放得下
             k = min(max_w / tw, max_h / th)
             tw, th = int(tw * k), int(th * k)
             slide = slide.resize((tw, th), Image.LANCZOS)
         bg = Image.new("RGB", (W, H), (25, 28, 40))
         img = bg.copy()
-        img.paste(slide, ((W - tw) // 2, max(0, CANVAS["slide_bottom"] - th)))
+        _f = float(CANVAS.get("slide_center", 0.5))
+        img.paste(slide, ((W - tw) // 2, max(0, round((CANVAS["slide_bottom"] - th) * _f))))
         img.save(dst)
         return img
     slide = slide.crop(((tw - W) // 2, 0, (tw - W) // 2 + W, th))

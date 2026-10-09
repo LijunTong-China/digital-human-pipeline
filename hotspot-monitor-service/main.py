@@ -70,7 +70,7 @@ async def health_check() -> Dict[str, Any]:
         "status": "healthy",
         "environment": config.ENVIRONMENT,
         "version": "1.0.0",
-        "scheduler_running": scheduler.is_running()
+        "scheduler_running": scheduler.scheduler.running
     }
 
 # 配置信息接口

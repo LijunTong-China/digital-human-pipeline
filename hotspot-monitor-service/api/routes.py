@@ -1,4 +1,5 @@
 """API路由定义"""
+from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -14,7 +15,7 @@ from services import (
 )
 from .dependencies import get_db
 
-router = APIRouter(prefix="/api/v1", tags=["api"])
+router = APIRouter(tags=["api"])   # 前缀由 main.py 统一挂 /api/hotspot,避免双重前缀
 
 
 # 创作者管理路由
@@ -261,6 +262,28 @@ async def create_topic(
     return APIResponse(success=True, data=topic)
 
 
+@router.get("/topics/hot", response_model=APIResponse[List[Topic]])
+async def get_hot_topics(
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    """获取热门选题"""
+    service = get_topic_service()
+    topics = service.get_hot_topics(limit=limit)
+    return APIResponse(success=True, data=topics)
+
+
+@router.get("/topics/quality", response_model=APIResponse[List[Topic]])
+async def get_quality_topics(
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    """获取高质量选题"""
+    service = get_topic_service()
+    topics = service.get_quality_topics(limit=limit)
+    return APIResponse(success=True, data=topics)
+
+
 @router.get("/topics/{topic_id}", response_model=APIResponse[Topic])
 async def get_topic(
     topic_id: int,
@@ -343,28 +366,6 @@ async def get_topic_stats(
     if not stats:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="选题不存在")
     return APIResponse(success=True, data=stats)
-
-
-@router.get("/topics/hot", response_model=APIResponse[List[Topic]])
-async def get_hot_topics(
-    limit: int = 10,
-    db: Session = Depends(get_db)
-):
-    """获取热门选题"""
-    service = get_topic_service()
-    topics = service.get_hot_topics(limit=limit)
-    return APIResponse(success=True, data=topics)
-
-
-@router.get("/topics/quality", response_model=APIResponse[List[Topic]])
-async def get_quality_topics(
-    limit: int = 10,
-    db: Session = Depends(get_db)
-):
-    """获取高质量选题"""
-    service = get_topic_service()
-    topics = service.get_quality_topics(limit=limit)
-    return APIResponse(success=True, data=topics)
 
 
 @router.post("/topics/{video_id}/extract", response_model=APIResponse[Dict[str, Any]])

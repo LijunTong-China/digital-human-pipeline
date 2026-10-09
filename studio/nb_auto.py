@@ -1,19 +1,24 @@
 # -*- coding: utf-8 -*-
-"""②PPT 生成自动化(NotebookLM):加来源 → 填骨架提示词 → 生成 → 等卡片 → 下载 PDF。
+"""②PPT 生成自动化(NotebookLM):发现来源联网检索 → 填提示词 → 生成 → 等卡片 → 下载 PDF。
 
-设计见 README §2。关键教训(实测):
+设计见 README §2。来源通道(2026-10-08 定版方案B):
+- 默认:NotebookLM「发现来源」联网检索(来源面板搜索框填主题 → 提交 → 导入),真实资料
+- --paste-source:旧通道,粘贴 content.py 闭门写的 source_text.txt(备用)
+关键教训(实测):
 - **0 来源提交会被静默丢弃**(弹框照常关闭但不生成),必须先有 ≥1 个来源
-- 来源=LLM 基于 outline 生成的资料文章(content.py ②前置步骤),经「添加来源→复制的文字」粘贴
-- 演示文稿弹框内显示"来源 N 个",提交前自检 N=0 拒绝生成
-- 产物:Studio 卡片出现"正在生成演示文稿…"→完成后卡片就位 → 卡片查看器 ⋮ → 下载 PDF
+- 提示词刻意含糊(nb_prompt.txt,不锁逐页骨架):骨架填空式会导致 PPT 套话化
+- 产物:Studio 卡片出现"正在生成演示文稿…"→完成后卡片就位 → 卡片 ⋮ → 下载 PDF
 
-用法:python studio/nb_auto.py [--explore]
-退出码:0=slides.pdf 已就位;2=服务不可用/环境问题(日志见 nb_status.log)
+用法:python studio/nb_auto.py [--paste-source] [--explore]
+退出码:0=slides.pdf 已就位;2=服务不可用/环境问题(日志见 nb_status.log);3=已排队稍后生成
 """
 import json
 import subprocess
 import sys
 import time
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")   # Windows GBK 控制台防 UnicodeEncodeError
 from pathlib import Path
 
 STUDIO = Path(__file__).resolve().parent
@@ -22,8 +27,11 @@ CFG = avutils.load_config()   # 支持 // 注释
 NB = CFG["nb"]
 WORK = STUDIO / CFG["paths"]["work"]
 LOG = WORK / "nb_status.log"
+# 来源通道(2026-10-08 定版方案B):默认「发现来源」联网检索;--paste-source 保留旧粘贴文章通道
+PASTE_SOURCE = "--paste-source" in sys.argv
 PROMPT = WORK / "nb_prompt.txt"
 SRC_TEXT = WORK / "source_text.txt"
+SLIDES_DST = STUDIO / CFG["paths"]["slides"]
 
 
 def log(msg: str):
@@ -208,6 +216,75 @@ def add_source(page):
     abort("来源插入后计数仍为 0")
 
 
+def discover_add_source(page):
+    """方案B:用 NotebookLM 自带「发现来源」联网检索加来源(实测 UI,2026-10-08):
+    来源面板搜索框(placeholder「在网络中搜索新来源」)填主题 → 点 arrow_forward →
+    等「已完成」→ 点「导入」→ 来源计数 ≥1。0 来源提交会被静默丢弃,必须先有来源。"""
+    if source_count(page) > 0:
+        log(f"[来源] 已有 {source_count(page)} 个来源,跳过")
+        return
+    topic_f = WORK / "topic.json"
+    if not topic_f.exists():
+        abort("缺 topic.json(content 步骤先跑)")
+    t = json.loads(topic_f.read_text(encoding="utf-8"))
+    query = f"{t['title']} {t.get('angle', '')}"[:120]
+    n = page.evaluate("""(q) => {
+      const tas = [...document.querySelectorAll('textarea')]
+        .filter(e => e.offsetParent !== null
+                     && !e.closest('.cdk-overlay-container')
+                     && (e.placeholder||'').includes('网络中搜索'));
+      if (!tas.length) return -1;
+      const ta = tas[0];
+      const set = Object.getOwnPropertyDescriptor(
+        HTMLTextAreaElement.prototype, 'value').set;
+      set.call(ta, q);
+      ta.dispatchEvent(new Event('input', {bubbles: true}));
+      ta.focus();
+      return ta.value.length;
+    }""", query)
+    if n < 0:
+        abort("来源面板未找到联网搜索框(placeholder 含「网络中搜索」)")
+    log(f"[发现来源] 检索词: {query!r}")
+    page.wait_for_timeout(800)
+    clicked = page.evaluate("""() => {
+      const btns = [...document.querySelectorAll('button')]
+        .filter(e => e.offsetParent !== null);
+      const fwd = btns.find(b => (b.textContent||'').trim() === 'arrow_forward');
+      if (!fwd) return false;
+      fwd.click();
+      return true;
+    }""")
+    if not clicked:
+        abort("未找到搜索提交按钮(arrow_forward)")
+    # 等 Fast Research 完成(实测约 15~60s),出现「导入」按钮
+    timeout = NB.get("discover_timeout_sec", 300)
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        page.wait_for_timeout(10000)
+        state = page.evaluate("""() => {
+          const body = document.body.innerText;
+          return {researching: body.includes('正在研究'),
+                  hasImport: [...document.querySelectorAll('button')]
+                    .some(b => b.offsetParent !== null
+                               && (b.textContent||'').trim() === '导入')};
+        }""")
+        log(f"[发现来源] {int(time.time()-t0)}s "
+            f"{'研究中…' if state['researching'] else ('可导入' if state['hasImport'] else '等待中…')}")
+        if state["hasImport"]:
+            break
+    else:
+        abort(f"发现来源超时({timeout}s)未出现「导入」按钮")
+    page.evaluate("""() => [...document.querySelectorAll('button')]
+        .filter(b => b.offsetParent !== null
+                     && (b.textContent||'').trim() === '导入')[0].click()""")
+    for _ in range(24):  # 最长 120s 等来源计数 ≥1
+        page.wait_for_timeout(5000)
+        if source_count(page) > 0:
+            log(f"[来源] 联网来源已导入,当前 {source_count(page)} 个")
+            return
+    abort("导入后来源计数仍为 0")
+
+
 def wait_deck_done(page):
     """轮询直到演示文稿生成完成(卡片就位)。"""
     timeout = NB.get("card_timeout_sec", 1800)
@@ -230,13 +307,15 @@ def wait_deck_done(page):
 
 def download_pdf(page):
     """卡片自身 ⋮ 菜单 → 下载 PDF → 存 assets/slides.pdf(最短路径,无需开查看器)。"""
-    dst = STUDIO / CFG["paths"]["slides"]
+    dst = SLIDES_DST
     dst.parent.mkdir(parents=True, exist_ok=True)
     page.keyboard.press("Escape")   # 关掉可能残留的菜单
     page.wait_for_timeout(1000)
-    # Studio 面板内各卡片的 ⋮(x>1400, y>300);取最上面的=最新产物(演示文稿卡)
+    # Studio 面板内各卡片的 ⋮(右半区 x>视口60%, y>300);取最上面的=最新产物(演示文稿卡)
+    vw = page.evaluate("() => window.innerWidth")
+    xmin = max(1000, vw * 0.6)
     boxes = [b.bounding_box() for b in page.locator("button:has-text('more_vert')").all()]
-    boxes = [b for b in boxes if b and b["x"] > 1400 and b["y"] > 300]
+    boxes = [b for b in boxes if b and b["x"] > xmin and b["y"] > 300]
     if not boxes:
         abort("Studio 面板未找到演示文稿卡片的 ⋮ 菜单")
     box = sorted(boxes, key=lambda b: b["y"])[0]
@@ -321,7 +400,10 @@ def main():
         log(f"[笔记本] {page.url}")
 
         # 1.5 添加来源(0 来源提交会被静默丢弃);收起弹框后再开演示文稿
-        add_source(page)
+        if PASTE_SOURCE:
+            add_source(page)            # 旧通道:粘贴 source_text.txt(需先跑 gen_source_text)
+        else:
+            discover_add_source(page)   # 定版方案B:NotebookLM「发现来源」联网检索
         page.keyboard.press("Escape")
         page.wait_for_timeout(2000)
 

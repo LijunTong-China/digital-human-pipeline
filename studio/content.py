@@ -74,16 +74,30 @@ def pick_topic(hint_topic: str = "") -> dict:
 
 
 def write_nb_prompt(topic: dict, outline: dict):
-    """骨架直接内嵌进提示词:NotebookLM 按提示词执行,不做参考文档。"""
-    page_lines = "\n".join(
-        f"第{i}页《{pg['title']}》:要点 {' / '.join(str(x) for x in pg['points'])}"
-        f"(钩子:{pg['hook']})"
-        for i, pg in enumerate(outline["pages"], 1))
-    nb_prompt = (f"请生成一份演示文稿,主题《{topic['title']}》,共 {outline['n_pages']} 页。\n"
-                 "每页一个大标题 + 3~5 条短要点(每条不超过 18 字),不要大段文字。\n"
-                 "第 1 页只放主标题和一句话副标题;最后一页放行动清单。"
-                 "要点具体,内容有深度、引人深思,禁止'赋能/提升效率'式空话。\n"
-                 f"叙事主线:{outline['narrative']}\n逐页要求如下:\n" + page_lines)
+    """提示词定版方案B(2026-10-08 质量增强):不锁逐页骨架,只给质量纪律+版式+叙事弧线。
+    内容深浅由 NotebookLM 自己从「发现来源」联网检索的真实资料取材。
+    逐页骨架填空式提示词(旧方案A)会导致 PPT 套话化,已弃用。"""
+    nb_prompt = (
+        f"请基于来源资料,生成一份面向程序员/技术爱好者的中文演示文稿,"
+        f"主题《{topic['title']}》,共 {outline['n_pages']} 页。\n"
+        "内容纪律:\n"
+        "- 只用来源资料里真实出现的数据、案例、产品名、事件和时间;来源没有的不编造、不夸大\n"
+        "- 数字要带单位和语境(什么场景、什么时间、跟什么比),拒绝孤立的百分比\n"
+        "- 要点必须具体:优先带数字、版本号、真实事件名;禁止'赋能/提升效率/拥抱变化'式空话\n"
+        "- 各页要点不得互相重复,每页覆盖来源的不同侧面,信息均匀铺满全部页数\n"
+        "版式:\n"
+        "- 第 1 页只放主标题 + 一句话副标题(副标题直接抛出核心反常识结论)\n"
+        "- 每页一个大标题 + 3~5 条短要点(每条不超过 18 字),不要大段文字\n"
+        "- 标题用有张力的短句(结论式/反问式),不用『XX介绍』『XX概述』式名词标题\n"
+        "- 严禁出现任何制作工具/平台名称(如 NotebookLM、Gemini、Google)或『AI 生成』字样\n"
+        "叙事弧线(整篇设计,不逐页限定):\n"
+        "- 开场钩子(反常识现象/真实事故) → 现象铺开 → 原因与背后机制 → 数据与案例佐证"
+        " → 反直觉的深层结论 → 最后一页收在行动清单\n"
+        "- 行动清单必须具体可执行:每条一个明确动作(先做什么、再做什么),禁止『持续关注』式空话\n"
+        "- 中间至少安排 1 页『常见误解 vs 事实』对比,1 页前瞻(照这个趋势演化下去会怎样)\n"
+        "语言:中文为主,专业术语与产品名保留英文原词\n"
+        f"切入角度参考:{topic['angle']}\n"
+        f"希望观众看完能带走:{topic.get('takeaway', '')}")
     WORK.mkdir(parents=True, exist_ok=True)
     (WORK / "nb_prompt.txt").write_text(nb_prompt, encoding="utf-8")
 
@@ -137,7 +151,9 @@ SOURCE_MIN, SOURCE_MAX = 2000, 3000
 
 
 def gen_source_text(outline: dict) -> str:
-    """基于 outline 生成来源资料文章(血肉),NotebookLM 0 来源会被静默丢弃,必须先加来源。"""
+    """【已弃用,2026-10-08 定版方案B后不再被流程调用】闭门写来源文章。
+    现行来源 = NotebookLM「发现来源」联网检索(nb_auto.py discover_add_source)。
+    保留本函数仅作 --paste-source 旧通道备用。基于 outline 闭门写资料文章。"""
     raw = U.llm([
         {"role": "system", "content": SOURCE_PROMPT.format(
             outline=json.dumps(outline, ensure_ascii=False, indent=1),
@@ -542,17 +558,15 @@ def step_content(hint: str = "", force_script: bool = False):
                 t = json.loads(topic_file.read_text(encoding="utf-8"))
                 o = json.loads(outline_file.read_text(encoding="utf-8"))
                 print(f"[选题复用] [{t.get('direction', '')}] {t['title']}")
-                if not (WORK / "nb_prompt.txt").exists():
-                    write_nb_prompt(t, o)   # 复用也要保证提示词在
+                write_nb_prompt(t, o)   # 每次都重写,防提示词定版后旧文件残留
             else:
                 t = pick_topic(hint)
                 print(f"[选题] [{t['direction']}] {t['title']}\n[角度] {t['angle']}")
                 o = plan_outline(t)
                 print(f"[规划] {o['n_pages']} 页 | 主线: {o['narrative']}")
                 _invalidate_stale(t)   # 全新选题也要盖章+清残留
-            if not (WORK / "source_text.txt").exists():
-                gen_source_text(o)   # ② 需要:NotebookLM 无来源提交会被静默丢弃
-            # ② 自动执行 NotebookLM(加来源 → 骨架提示词 → 生成 → 等卡片 → 下 PDF)
+            # ② 自动执行 NotebookLM(发现来源联网检索 → 含糊提示词 → 生成 → 等卡片 → 下 PDF)
+            # 来源由 nb_auto 的「发现来源」通道解决(0 来源提交会被静默丢弃),不再本地写来源文章
             import subprocess
             collect = (WORK / "nb_notebook_url.txt").exists() and not slides.exists()
             cmd = [sys.executable, str(STUDIO / "nb_auto.py")]

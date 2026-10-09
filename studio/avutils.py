@@ -153,6 +153,37 @@ def md5_of(path) -> str:
     return h.hexdigest()
 
 
+# ---------------------------------------------------------------- 服务器实例自动选择
+
+def resolve_server_port() -> int:
+    """多实例候选端口(server.hosts):逐个 ssh 探测,谁开机用谁,返回可用端口。
+
+    AutoDL 每次开机端口可能变化,且不同实例空闲 GPU 不同,所以不落盘缓存,
+    每次进程启动扫一遍(BatchMode 快速失败,单台约几秒)。"""
+    srv = CFG["server"]
+    cands = srv.get("hosts") or [srv["port"]]
+    if len(cands) == 1:
+        return int(cands[0])
+    import subprocess
+    to = srv.get("connect_timeout_sec", 10)
+    poll = srv.get("hosts_poll_sec", 30)          # 全部离线时每隔多少秒重扫一遍
+    attempt = 0
+    while True:
+        for p in cands:
+            r = subprocess.run(
+                ["ssh", "-o", f"ConnectTimeout={to}", "-o", "BatchMode=yes",
+                 "-o", "StrictHostKeyChecking=accept-new",
+                 "-p", str(p), f"root@{srv['host']}", "true"],
+                capture_output=True, text=True)
+            if r.returncode == 0:
+                print(f"[server] 端口 {p} 在线,选用该实例")
+                return int(p)
+        attempt += 1
+        print(f"[server] 三台实例均不在线(第 {attempt} 轮),"
+              f"请开机任意一台 AutoDL 实例,{poll}s 后自动重扫...", flush=True)
+        time.sleep(poll)
+
+
 # ---------------------------------------------------------------- 内容页数(动态)
 
 def voices_pages() -> list:

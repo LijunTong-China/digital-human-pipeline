@@ -22,7 +22,7 @@
     "topic_cache": "output/work/_topics_done.json", // 已做过选题缓存(查重)
     "plan": {
       "min_pages": 10,      // PPT 页数下限(大纲规划强制落在此区间)
-      "max_pages": 14       // PPT 页数上限
+      "max_pages": 16       // PPT 页数上限(2026-10-08 从 14 提到 16,内容量加厚)
     },
     "script_min_chars": 140, // 每页演播稿最少字数(约 35 秒口播)
     "script_max_chars": 220, // 每页演播稿最多字数(约 55 秒)
@@ -40,7 +40,10 @@
   "intro": {
     "max_sec": 12,      // 软限:超出最多加速,不再硬压;文案字数也按它反推
     "speed_max": 1.2,   // 加速上限倍数(2026-10-04 定版,1.5 倍声音发飘弃用)
-    "text": "auto"      // auto = LLM 3 候选自评选优;也可写死一段文字
+    "text": "auto",     // auto = LLM 3 候选自评选优;也可写死一段文字
+    "avatar_scale": 0.83 // 形象高度占画布比例(1=满高;0.85=头顶留空隙,底部落地)
+                         // 调整发生在⑤b 视频制作阶段(下载后缩放+白底补边),合成阶段零改动
+                         // 2026-10-08:缩放改为高度驱动(宽超画布居中裁边),数值真实生效
   },
 
   // ---- ⑧ 发布(publish/,2026-10-04 建,设计见 publish/README.md) ----
@@ -58,7 +61,8 @@
     "daily_limit": 1,                  // 每平台每日发布上限(新号期=1,防风控)
     "ai_declare": true,                // 自动勾选"AI 生成"声明(合规)
     // 发布时间窗(随机取点,不整点;README §2⑤);不在此窗口内则顺延
-    "time_windows": [["10:30", "11:40"], ["19:10", "21:30"]],
+    // 2026-10-09:放开限制,全天可发(留 2 分钟边距防抖动越界)
+    "time_windows": [["00:02", "23:58"]],
     "window_jitter_min": 10,           // 窗口两端随机收缩的分钟数(抖动)
     "platform_gap_min": 30,            // 两平台发布最小间隔(分;矩阵号特征防护)
     "warmup": true,                    // 发布前在创作中心浏览 1~2 分钟(暖场)
@@ -78,13 +82,15 @@
     // true = 额度尽时点「稍后生成」排队并退出(几小时后重跑自动补收);false = 直接终止
     "allow_later_generation": true,
     // false = 只填词不提交(人工核对页面用);验证无误后改 true
-    "submit": false
+    "submit": true
   },
 
   // ---- 4090 GPU 服务器(AutoDL):④克隆音色 / ⑤口型 / ⑤b开场白,用完自动关机 ----
   "server": {
     "host": "connect.nmb1.seetacloud.com",
     "port": 23278,
+    "hosts": [49230, 23278, 44128],  // 三台实例候选端口:启动时逐个探测,谁开机用谁(端口不固定因为每次开机可能换号)
+    "hosts_poll_sec": 30,            // 三台全离线时,每隔多少秒自动重扫(等用户开机,不退出)
     "root": "/root/autodl-tmp",                     // 服务器工作根目录
     "python": "/root/miniconda3/envs/emv3/bin/python",
     "clone_python": "/root/autodl-tmp/envs/cosyvoice/bin/python",  // ④克隆音色的独立环境
@@ -108,7 +114,9 @@
   "canvas": {
     "width": 1080,
     "height": 1920,
-    "slide_bottom": 1300,  // PPT 图片底边在画布上的 y
+    "slide_bottom": 1380,  // PPT 展示区的底边 y(字幕带在其下方;2026-10-08 从 1300 回调)
+    "slide_center": 0.75,  // PPT 在展示区(0~slide_bottom)内的垂直位置:0=贴顶 0.5=正中 1=贴底
+                           // 2026-10-08:上次 0.5 偏上、更早贴底偏下,取中间 0.75
     "lip_width": 260,      // 【保留参数】人像小窗宽(当前三种版式均未用到,留给后续版式)
     "lip_margin_r": 20,    // 【保留参数】人像小窗右边距
     "lip_margin_b": 150,   // 【保留参数】人像小窗下边距
